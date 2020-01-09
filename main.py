@@ -13,6 +13,7 @@ from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
 from kivy.clock import Clock
 import json
+import os
 
 
 class Manager(ScreenManager):
@@ -101,17 +102,24 @@ class Listas(Screen):
 		# Pega o texto do textInput
 		text = self.ids.text.text
 
-		# Adiciona o texto ao BoxLayout, para aparecer na tela
-		self.ids.box.add_widget(CardLista(text))
+		
+		if text in self.listas:
+			self.erroPopUp("Não é possivel adicionar uma lista com nome repetido.")
+		else:
+			if text == "":
+				self.erroPopUp("Não é possível adicionar uma lista sem nome.")
+			else:
+				# Adiciona o texto ao BoxLayout, para aparecer na tela
+				self.ids.box.add_widget(CardLista(text))
 
-		# Limpa o campo do textInput
-		self.ids.text.text = ''
+				# Limpa o campo do textInput
+				self.ids.text.text = ''
 
-		# Adiciona o texto a lista de lista
-		self.listas.append(text)
+				# Adiciona o texto a lista de lista
+				self.listas.append(text)
 
-		# Salva
-		self.saveData()
+				# Salva
+				self.saveData()
 		
 	def removeWidget(self, lista):
 		# Toca o som
@@ -121,6 +129,9 @@ class Listas(Screen):
 		# Guarda o texto que havia no widget (para remover da lista depois)
 		text = lista.ids.button.text
 
+		if os.path.exists(self.path + lista.ids.button.text + ".json"):
+			os.remove(self.path + lista.ids.button.text + ".json")
+
 		#remove o widget
 		self.ids.box.remove_widget(lista)
 
@@ -129,17 +140,50 @@ class Listas(Screen):
 
 		# Salva
 		self.saveData()
-	
+
+
+	def erroPopUp(self, text = ''):
+		#Toca o som do popUp
+		global popSound
+		popSound.play()
+
+		box = BoxLayout(orientation = 'vertical', padding = 10, spacing = 10)
+		
+		pop = Popup(title = "Erro", content=box, size_hint = (None, None), size = (100,100))
+
+		ok = ButtonInicio(text= 'Ok', on_release = pop.dismiss)
+		
+		texto = Label(text=text)
+		
+		box.add_widget(texto)
+		box.add_widget(ok)
+		
+		#Animações do texto do botão "ok": pisca nas cores preto e branco
+		animText = Animation(color = (0,0,0,1), duration = 0.8) + Animation(color = (1,1,1,1), duration = 0.8)
+		animText.repeat = True
+		animText.start(ok)
+
+		# Animações do PopUp: começa pequeno e atinge um tamanho maior
+		anim = Animation(size =(500,180), duration = 0.15, t='out_back')
+		anim.start(pop)
+
+		pop.open()
+
+		return True
+		
+
 	def saveData(self, *args):
 		# salva a data no diretorio
 		with open(self.path+'listas.json', 'w') as data:
 			json.dump(self.listas, data)
+			data.close()
 
 	def loadData(self, *args):
 		# Tenta ler o arquivo data.json, caso não exista, não faz nada
 		try:
 			with open(self.path+'listas.json', 'r') as data:
 				self.listas = json.load(data)
+				data.close()
 		except: # Para não dar erro caso não exista o arquivo
 			pass
 
@@ -147,7 +191,6 @@ class Listas(Screen):
 class Lista(Screen):
 	lista = []
 	path = ''
-	
 	
 	# def __init__(self, name):
 	# 	self.name = name
@@ -180,11 +223,6 @@ class Lista(Screen):
 		if key == 27:
 			App.get_running_app().root.current = 'inicio'
 		return True  
-
-	def saveData(self, *args):
-		# salva a data no diretorio
-		with open(self.path+self.name+'.json', 'w') as data:
-			json.dump(self.lista, data)
 
 	def addWidget(self):
 		# Toca o som
@@ -223,11 +261,18 @@ class Lista(Screen):
 		# Salva
 		self.saveData()
 
+	def saveData(self, *args):
+		# salva a data no diretorio
+		with open(self.path+self.name+'.json', 'w') as data:
+			json.dump(self.lista, data)
+			data.close()
+
 	def loadData(self, *args):
 		# Tenta ler o arquivo data.json, caso não exista, não faz nada
 		try:
 			with open(self.path+self.name+'.json', 'r') as data:
 				self.lista = json.load(data)
+				data.close()
 		except: # Para não dar erro caso não exista o arquivo
 			pass
 
@@ -237,10 +282,11 @@ class CardLista(BoxLayout):
 	def __init__(self, text = '', **kwargs):
 		super().__init__(**kwargs)
 		self.ids.button.text = text
-		self.lista = Lista(name = text)
-		
-		#self.lista.name = text
-		App.get_running_app().root.add_widget(self.lista)
+		try:
+			self.lista = has_screen(text)
+		except:
+			self.lista = Lista(name = text)
+			App.get_running_app().root.add_widget(self.lista)
 
 
 	def openLista(self):

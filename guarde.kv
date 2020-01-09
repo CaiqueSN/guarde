@@ -15,15 +15,14 @@
 		orientation: 'vertical'
 		padding: root.width*0.25, root.height*0.1
 		spacing: '30dp'
-		canvas:
+		canvas.before:
 			Color:
-				rgba: 1,1,1,1
+				rgba: 0.8, 0.8, 0.8, 1
 			Rectangle:
-				size: self.size
 				pos: self.pos
-				source: 'moldura.png'
+				size: self.size
 		Image:
-			source: 'logo.png'
+			source: 'icon.png'
 			size_hint_y: 4
 			allow_stretch: True
 		ButtonInicio:
@@ -40,6 +39,12 @@
 <Listas>:
 	BoxLayout:
 		orientation: 'vertical'
+		canvas.before:
+			Color:
+				rgba: 0.8, 0.8, 0.8, 1
+			Rectangle:
+				pos: self.pos
+				size: self.size
 		ActionBar:
 			ActionView:
 				ActionPrevious:
@@ -71,6 +76,12 @@
 <Lista>:
 	BoxLayout:
 		orientation: 'vertical'
+		canvas.before:
+			Color:
+				rgba: 0.8, 0.8, 0.8, 1
+			Rectangle:
+				pos: self.pos
+				size: self.size
 		ActionBar:
 			ActionView:
 				ActionPrevious:
@@ -111,7 +122,8 @@
 		text: 'X'
 		size_hint_x : None
 		width: '40sp'
-		on_release: app.root.get_screen(root.lista_name).removeWidget(root)
+		on_release: root.parent.parent.parent.parent.removeWidget(root)
+		#app.root.get_screen(root.lista_name).removeWidget(root)
 
 <CardLista>:
     size_hint_y: None

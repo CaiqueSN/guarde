@@ -1,0 +1,1 @@
+{"buildozer:defaultcommand": ["android", "debug", "deploy", "run"]}
